@@ -80,7 +80,7 @@ schedule:
   - cron: '0 9 * * 5'
 
 
-Runs automatically every Friday at 09:00 UTC.
+Runs automatically every Friday at 92:00 UTC.
 
 Manual Run
 workflow_dispatch:
