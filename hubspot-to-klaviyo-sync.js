@@ -1,3 +1,4 @@
+// hubspot-to-klaviyo-full-sync.js
 import axios from 'axios';
 import dotenv from 'dotenv';
 
@@ -150,6 +151,7 @@ async function upsertProfile(contact) {
           },
         })
       );
+
       return lookup.data.data?.[0]?.id;
     }
     throw err;
@@ -249,15 +251,8 @@ async function batchAddToList(listId, profileIds) {
 
     console.log('✅ Sync completed successfully');
 
-    // GitHub Actions: persist LAST_SYNC_AT for next run
-    if (process.env.GITHUB_ENV) {
-      const now = new Date().toISOString();
-      console.log(`🕒 Updating LAST_SYNC_AT → ${now}`);
-      require('fs').appendFileSync(
-        process.env.GITHUB_ENV,
-        `LAST_SYNC_AT=${now}\n`
-      );
-    }
+    // REQUIRED: GitHub Actions parses this to update LAST_SYNC_AT
+    console.log(`__SYNC_COMPLETED_AT__=${new Date().toISOString()}`);
   } catch (err) {
     console.error('❌ Sync failed:', err.response?.data || err.message);
     process.exit(1);

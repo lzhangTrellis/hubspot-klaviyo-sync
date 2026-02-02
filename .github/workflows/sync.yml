@@ -1,9 +1,9 @@
 name: HubSpot → Klaviyo Sync
 
 on:
-  workflow_dispatch:   # allows manual run
   schedule:
-    - cron: '0 9 * * 5' # every Friday at 9am UTC
+    - cron: '0 9 * * 5' # Every Friday
+  workflow_dispatch:
 
 jobs:
   sync:
@@ -13,7 +13,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -22,8 +22,25 @@ jobs:
         run: npm install
 
       - name: Run sync
-        run: node hubspot-to-klaviyo-full-sync.js
+        id: sync
+        run: |
+          node hubspot-to-klaviyo-full-sync.js | tee sync.log
         env:
           HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
           KLAVIYO_API_KEY: ${{ secrets.KLAVIYO_API_KEY }}
-          LAST_SYNC_AT: ${{ secrets.LAST_SYNC_AT }}
+          LAST_SYNC_AT: ${{ vars.LAST_SYNC_AT }}
+
+      - name: Extract new sync timestamp
+        id: timestamp
+        run: |
+          NEW_TIME=$(grep "__SYNC_COMPLETED_AT__" sync.log | cut -d "=" -f2)
+          echo "new_time=$NEW_TIME" >> $GITHUB_OUTPUT
+
+      - name: Update LAST_SYNC_AT variable
+        if: success()
+        run: |
+          curl -X PATCH \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/${{ github.repository }}/actions/variables/LAST_SYNC_AT \
+            -d "{\"name\":\"LAST_SYNC_AT\",\"value\":\"${{ steps.timestamp.outputs.new_time }}\"}"
