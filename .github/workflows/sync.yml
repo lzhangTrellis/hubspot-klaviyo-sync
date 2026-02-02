@@ -1,0 +1,29 @@
+name: HubSpot → Klaviyo Sync
+
+on:
+  workflow_dispatch:   # allows manual run
+  schedule:
+    - cron: '0 2 * * 5' # every Friday at 2am UTC
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run sync
+        run: node hubspot-to-klaviyo-full-sync.js
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          KLAVIYO_API_KEY: ${{ secrets.KLAVIYO_API_KEY }}
+          LAST_SYNC_AT: ${{ secrets.LAST_SYNC_AT }}
