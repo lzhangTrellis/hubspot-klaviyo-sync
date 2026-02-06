@@ -83,7 +83,7 @@ async function fetchContactsSince(lastSync) {
                 {
                   filters: [
                     {
-                      propertyName: 'hs_lastmodifieddate',
+                      propertyName: 'createdate',
                       operator: 'GT',
                       value: lastSync.toISOString(),
                     },
